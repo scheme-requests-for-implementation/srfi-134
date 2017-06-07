@@ -52,7 +52,13 @@
  (test-assert (ideque-empty? (ideque-remove-back (ideque 1))))
  (test 0 (ideque-front (ideque-add-front (ideque 1 2 3) 0)))
  (test 0 (ideque-back (ideque-add-back (ideque 1 2 3) 0)))
- )
+ ;; loss of front ideque
+ (let ((id (ideque #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f)))
+  (set! id (ideque-remove-front (ideque-add-back id 1)))
+  (set! id (ideque-remove-front (ideque-add-back id 1)))
+  (set! id (ideque-remove-front (ideque-add-back id 1)))
+  (test #f (ideque-front (ideque-take-right id 12)))) 
+)
 
 (test-group "ideque/other-accessors"
  (define (check name ideque-op list-op n)
