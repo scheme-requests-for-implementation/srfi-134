@@ -235,7 +235,7 @@
         (check 0 '() lenr. (take r lenr.))))))
 
 (define (%check-length dq n)
-  (unless (<= 0 n (- (ideque-length dq) 1))
+  (unless (<= 0 n (ideque-length dq))
     (error "argument is out of range:" n)))
 
 ;; API
