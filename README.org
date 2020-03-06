@@ -1,6 +1,8 @@
 * SRFI 134: Immutable Deques
 
-** by Kevin Wortman, John Cowan
+** by Kevin Wortman and John Cowan
+
+
 
 This repository hosts [[https://srfi.schemers.org/srfi-134/][SRFI 134]]: Immutable Deques, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
