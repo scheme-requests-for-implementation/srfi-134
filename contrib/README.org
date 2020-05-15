@@ -1,0 +1,2 @@
+This directory contains implementations of SRFI 134 provided by people
+other than Kevin Wortman and John Cowan, the authors of the SRFI.

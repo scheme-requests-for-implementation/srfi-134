@@ -1,0 +1,88 @@
+This directory contains an implementation of SRFI 134 for [[https://www.gnu.org/software/guile/][GNU Guile]]
+provided by Arne Babenhauserheide.  Arne has provided versions in both
+Scheme syntax and in Wisp syntax (see [[https://srfi.schemers.org/srfi-119/][SRFI 119]]: wisp: simpler
+indentation-sensitive scheme).
+
+Note that the license for this implementation is *not* the standard
+SRFI license.  Please see [[file:COPYING.lgpl][COPYING.lgpl]].
+
+Here are Arne's comments on this contribution:
+
+#+begin_quote
+I now finished the implementation of SRFI-134 for Guile.  Attached are
+the files both in SRFI-119 (wisp) syntax and in regular s-expressions,
+as well as the same for the doctests module I use (it’s one I wrote
+myself that enables me to have tests right in the
+procedure-definitions) and the license files (gpl+lgpl, since LGPL
+references GPL).
+
+To run the tests, just use:
+
+#+begin_src sh
+chmod +x deque.scm
+./deque.scm --test
+#+end_src
+
+To run the wisp versions, you’ll need wisp installed. See
+https://www.draketo.de/english/wisp
+
+Or you can run them from the guarded-commands repository which directly
+includes a copy of the wisp language definition, so running wisp files
+grabs the local wisp version of this repository:
+https://hg.sr.ht/~arnebab/guarded-commands
+
+Almost all procedures have tests attached. You can recognize them by
+this pattern:
+
+#+begin_src scheme
+  (define (ideque-remove-front ideq)
+      "Returns an ideque with the front element of ideque removed. It is an error
+  for ideque to be empty. Takes O(1) time."
+      #((tests
+              (test-equal (ideque '())
+                  (ideque-remove-front (make-ideque '(1) '())))))
+      …)
+#+end_src
+
+Forms like (test-equal …) are run as tests via srfi-64.
+
+I hope I got the generators right.  The SRFI is not in Guile, so I
+more or less fudged it:
+
+#+begin_src scheme
+  (define (ideque->generator ideq)
+    "Conversion from an ideque to a SRFI 121 generator. Takes O(n) time. A
+  generator is a procedure that is called repeatedly with no arguments to generate
+  consecutive values, and returns an end-of-file object when it has no more values
+  to return."
+    #((tests
+       (test-equal 1
+                   ((ideque->generator (ideque '(1 2 3)))))))
+    (define gen
+      (let ((ideq ideq))
+        (lambda ()
+          (if (ideque-empty? ideq)
+              (eof-object)
+              (let ((val (ideque-front ideq)))
+                (set! ideq (ideque-remove-front ideq))
+                val)))))
+    gen)
+
+  (define (generator->ideque gen)
+    "Conversion from a SRFI 121 generator and an ideque. Takes O(n) time. A
+  generator is a procedure that is called repeatedly with no arguments to generate
+  consecutive values, and returns an end-of-file object when it has no more values
+  to return."
+    #((tests
+       (test-equal '(1 2 3)
+                   (ideque->list
+                    (generator->ideque
+                     (ideque->generator
+                      (ideque '(1 2 3))))))))
+    (let loop ((ideq (ideque '())))
+      (define res (gen))
+      (if (eof-object? res)
+          ideq
+          (loop (ideque-add-back ideq res)))))
+#+end_src
+#+end_quote
