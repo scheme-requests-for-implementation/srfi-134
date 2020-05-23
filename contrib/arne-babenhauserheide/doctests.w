@@ -145,7 +145,7 @@ define : doctests-testmod mod
                                     match doctest
                                       : (('quote id) tests ...) moretests ...
                                         string-join
-                                            list filename 
+                                            list filename
                                                 ;; escape / in paths
                                                 string-join (string-split (symbol->string name) #\/ ) "--"
                                                 symbol->string id
@@ -162,8 +162,8 @@ define : doctests-testmod mod
                                         . tests
                                  cleaned
                                         cons 'begin
-                                            cons '(import (srfi srfi-64)) 
-                                                cons 
+                                            cons '(import (srfi srfi-64))
+                                                cons
                                                     list 'test-begin : or testid ""
                                                     append
                                                         . body

@@ -40,9 +40,9 @@ fi
 ;; John Cowan, Kevin Wortman (2015). All Rights Reserved.
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-;; 
+;;
 ;; The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-;; 
+;;
 ;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
@@ -52,7 +52,7 @@ fi
 
 (define-module (deque)
     #:export
-    (main 
+    (main
       ;; SRFI 134 operations
       ;; Constructors
       ideque ideque-tabulate ideque-unfold ideque-unfold-right
@@ -106,7 +106,7 @@ fi
                   add-to))
             (else
                 (error "illegal state: other elements of ideque must never be null? when adding to an ideque with at least 2 elements, but elements are add-to ~s and other ~s, trying to add value ~s. This is a programming error, please report it!" add-to other value)))))
-    
+
 
 (define (ideque-add-front ideq value)
     "Returns an ideque with obj pushed to the front of ideque. Takes O(1) time. "
@@ -118,7 +118,7 @@ fi
                   (ideque-back-elements ideq)
                   value)))
         (make-ideque front back)))
-          
+
 
 (define (ideque-add-front! ideq value)
     "Adds the obj to the front of ideque. Takes O(1) time. Mutates the ideque."
@@ -353,7 +353,7 @@ fi
     #((tests
             (test-equal (list 0 1 2 3)
                 (ideque->list
-                  (ideque-unfold 
+                  (ideque-unfold
                     (λ(x) (> x 3))
                     (λ(x) x)
                     (λ(x) (+ x 1))
@@ -375,7 +375,7 @@ fi
     #((tests
             (test-equal (list 3 2 1 0)
                 (ideque->list
-                  (ideque-unfold-right 
+                  (ideque-unfold-right
                     (λ(x) (> x 3))
                     (λ(x) x)
                     (λ(x) (+ x 1))
@@ -419,7 +419,7 @@ fi
                      (loop (cdr elements1) (cdr elements2)))
                    (else
                      #f))))))
-                     
+
 (define (ideque-any pred ideq)
     "Invokes pred on the elements of the ideque in order until one call returns a true value, which is then returned. If there are no elements, returns #f. Takes O(n) time."
     #((tests
@@ -700,7 +700,7 @@ fi
         ;; ideques without empty side stay unchanged
         (else
           (make-ideque front back))))
-         
+
 
 (define-syntax-rule (ideque-operate-on-elements/internal ideq proc args ...)
     (make-balanced-ideque/internal
@@ -752,7 +752,7 @@ fi
                     (reverse l)))))
     (for-each proc (ideque-back-elements ideq))
     (for-each proc (reverse (ideque-front-elements ideq))))
-    
+
 (define (ideque-fold proc nil ideq)
     "Invokes proc on the elements of ideque in forward order, passing the result of the previous invocation as a second argument. For the first invocation, nil is used as the second argument. Returns the result of the last invocation, or nil if there was no invocation. Takes O(n) time."
     #((tests
@@ -827,7 +827,7 @@ fi
             (car found))
         ((not (null? failure))
             ((car failure)))
-        (else 
+        (else
             #f)))
 
 (define (ideque-find pred ideq . failure)
@@ -876,7 +876,7 @@ fi
     (let loop ((res (ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-front ideq))))
             res
-            (loop 
+            (loop
                 (ideque-add-back res (ideque-front ideq))
                 (ideque-remove-front ideq)))))
 
@@ -889,7 +889,7 @@ fi
     (let loop ((res (ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-back ideq))))
             res
-            (loop 
+            (loop
                 (ideque-add-front res (ideque-back ideq))
                 (ideque-remove-back ideq)))))
 
@@ -939,7 +939,7 @@ fi
     (let loop ((res (ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (pred (ideque-front ideq)))
             (values res ideq)
-            (loop 
+            (loop
                 (ideque-add-back res (ideque-front ideq))
                 (ideque-remove-front ideq)))))
 
