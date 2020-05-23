@@ -1,0 +1,38 @@
+#+title: ideques (srfi-134 for Guile)
+
+The ideque module implements an immutable deque as defined in
+[[https://srfi.schemers.org/srfi-134/srfi-134.html][srfi-134]], following a two singly-linked-list approach following the
+algorithm design manual.
+
+Compared to the reference implementation of [[https://srfi.schemers.org/srfi-134/srfi-134.html][srfi-134]], it has slighly
+lower per-operation overhead, because the record that keeps the
+reference does not track the length. Adding items to the deque is
+cheaper, because there balancing on addition only happens when one
+side is empty and the other has more than one element, but removing
+elements is slower and has higher skitter, because it balances when
+one of the two lists is empty.
+
+When it removes an element, but the list at the respective side is
+empty, only 2/3rd of the elements are moved from the other side to
+keep the worst case retrieval time constant. Without this step, time
+for removal could be linear if elements would be removed alternating
+front and back.
+
+The implementation preserves the invariant that for ideques with at
+least 2 elements neither the back list nor the front list can be
+empty. Along with the element-shift on removing, this ensures that
+elements from either side can always be retrieved in O(1) time and
+removed in amortized O(1) time.
+
+Creating one ideque with a number with for-each allocates around 30 byte of memory.
+
+Creating 1000000 ideques with map ideque allocates around 70 Bytes of memory per Ideque.
+
+A number in a large ideque requires about 16 Bytes of memory.
+
+Creating a large ideque via repeated calls to ideque-add-front
+allocates around 39 Bytes per number, of 14 can be garbage collected.
+
+(fold (λ(number ideq) (ideque-add-front ideq number)) (ideque '()) (iota 1000000))
+
+License is LGPL. See COPYING.gpl and COPYING.lgpl

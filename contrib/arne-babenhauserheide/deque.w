@@ -8,7 +8,7 @@ if [[ "$1" == "-i" ]]; then
     shift
     exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) -C $(dirname $(realpath "$0")) --language=wisp -x .w -e '(deque)' -- "${@}"
 else
-    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) -C $(dirname $(realpath "$0")) --language=wisp -x .w -e '(deque)' -c '' "${@}" 2>/dev/null || echo "${PROG} died" >2 && false
+    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) -C $(dirname $(realpath "$0")) --language=wisp -x .w -e '(deque)' -c '' "${@}" 2>/dev/null || (echo "${PROG} died" >2 && false)
 fi
 ; !#
 
@@ -49,6 +49,10 @@ fi
 ;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+;; TODO: Ensure that it is not possible to reach states with exported
+;; commands that require expensive balancing on addition.
+
+
 define-module : deque
     . #:export
     main 
@@ -72,7 +76,7 @@ define-module : deque
       ;; Conversion
       . ideque->list list->ideque ideque-take-while ideque-take-while-right ideque-drop-while ideque-drop-while-right ideque-span ideque-break
       ;; Extensions to SRFI-134
-      . make-ideque ideque-add-front! ideque-add-back! ideque-pop-front ideque-pop-back ideque-pop-front! ideque-pop-back!
+      . ideque-add-front! ideque-add-back! ideque-pop-front ideque-pop-back ideque-pop-front! ideque-pop-back!
 
 import : ice-9 pretty-print
          srfi srfi-1
@@ -87,11 +91,37 @@ define-record-type <ideque>
     front ideque-front-elements ideque-front-elements-set!
     back ideque-back-elements ideque-back-elements-set!
 
+define : ideque-add/internal add-to other value
+    if : not : null? other
+        values
+            cons value add-to
+            . other
+        cond
+            : null? add-to
+              ;; first element
+              values
+                  cons value add-to
+                  . other
+            : null? : cdr add-to
+              ;; second element: just use the front as the back
+              values
+                  cons value other
+                  . add-to
+            else
+                error "illegal state: other elements of ideque must never be null? when adding to an ideque with at least 2 elements, but elements are add-to ~s and other ~s, trying to add value ~s. This is a programming error, please report it!" add-to other value
+    
+
 define : ideque-add-front ideq value
     . "Returns an ideque with obj pushed to the front of ideque. Takes O(1) time. "
-    make-ideque
-        cons value : ideque-front-elements ideq
-        ideque-back-elements ideq
+    let-values
+        :
+            : front back
+              ideque-add/internal
+                  ideque-front-elements ideq
+                  ideque-back-elements ideq
+                  . value
+        make-ideque front back
+          
 
 define : ideque-add-front! ideq value
     . "Adds the obj to the front of ideque. Takes O(1) time. Mutates the ideque."
@@ -103,9 +133,16 @@ define : ideque-add-back! ideq value
 
 define : ideque-add-back ideq value
     . "Returns an ideque with obj pushed to the back of ideque. Takes O(1) time. "
-    make-ideque
-        ideque-front-elements ideq
-        cons value : ideque-back-elements ideq
+    let-values
+        :
+            : back front
+              ideque-add/internal
+                  ideque-back-elements ideq
+                  ideque-front-elements ideq
+                  . value
+        make-ideque front back
+
+
 
 define : ideque-remove/internal front back
     . "get the first value from the deque, shifting back to front if necessary.
@@ -118,61 +155,63 @@ define : ideque-remove/internal front back
             test-equal '((b c) () a)
                 let-values : : (front back value) : ideque-remove/internal '(a b c) '()
                     list front back value
-            test-equal '((b) (c) a)
+            test-error
                 let-values : : (front back value) : ideque-remove/internal '() '(c b a)
-                    list front back value
-            test-equal '((b c) (d) a)
-                let-values : : (front back value) : ideque-remove/internal '() '(d c b a)
-                    list front back value
-            test-equal '((b c d) (f e) a)
-                let-values : : (front back value) : ideque-remove/internal '() '(f e d c b a)
                     list front back value
             test-equal '(() () 0)
                 let-values : : (front back value) : ideque-remove/internal '() '(0)
                     list front back value
-            test-equal '((1) () 0)
+            test-error
                 let-values : : (front back value) : ideque-remove/internal '() '(1 0)
                     list front back value
+            test-equal '((1) () 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(1)
+                    list front back value
             test-equal '((1) (2) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(2 1)
                     list front back value
             test-equal '((1 2) (3) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(3 2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(3 2 1)
                     list front back value
-            test-equal '((1 2) (4 3) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(4 3 2 1 0)
+            test-equal '((1 2 3) (4) 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(4 3 2 1)
                     list front back value
             test-equal '((1 2 3) (5 4) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(5 4 3 2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(5 4 3 2 1)
                     list front back value
             test-equal '((1 2 3 4) (6 5) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(6 5 4 3 2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(6 5 4 3 2 1)
                     list front back value
-            test-equal '((1 2 3 4) (7 6 5) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(7 6 5 4 3 2 1 0)
+            test-equal '((1 2 3 4 5) (7 6) 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(7 6 5 4 3 2 1)
                     list front back value
             test-equal '((1 2 3 4 5) (8 7 6) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(8 7 6 5 4 3 2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(8 7 6 5 4 3 2 1)
                     list front back value
             test-equal '((1 2 3 4 5 6) (9 8 7) 0)
-                let-values : : (front back value) : ideque-remove/internal '() '(9 8 7 6 5 4 3 2 1 0)
+                let-values : : (front back value) : ideque-remove/internal '(0) '(9 8 7 6 5 4 3 2 1)
                     list front back value
     cond
-        : and (null? front) (null? back)
+        ;; error: deque is empty. Signal the error with #f
+        : and (null? back) : null? front
           values #f #f #f
+        ;; front is empty. Remove the last element from the back. This can only happen if at most 1 element remains in the deque.
         : null? front
+          if : not : null? : cdr back
+               error "illegal state: back elements of ideque with empty front must hold at most 1 element when removing an element from front, but elements are front ~s and back ~s. This is a programming error, please report it!" front back
+               values '() '() : car back
+        ;; remove the last element from front
+        : and (null? back) : null? : cdr front
+          values '() '() : car front
+        ;; balance the deque instead of removing the last element from front when more than one element remains in the back
+        : null? : cdr front
           let loop : (count 0) (reversed '()) (back back)
               if : null? : cdr back
                    cond
-                       : = count 0 ;; reversed is empty so the result is empty
-                         values '() '() : car back
-                       : = count 1 ;; needs no splitting of the reversed list
-                         values reversed '() : car back
-                       : = count 2 ;; needs no reversing of elements
-                         values
-                             list : car reversed
-                             cdr reversed ;; new back, single element so needs no reversing
-                             car back
+                       : = count 0 ;; there was only one element in the back, shift to the front
+                         values back '() : car front
+                       : = count 1 ;; there were two elements in the back, reversed holds the first back element, the back holds what’s the new front. No further splitting necessary
+                         values back reversed : car front
                        else
                          ;; move only 2/3rd of the reversed list to
                          ;; the front to prevent worst-case O(N²) when
@@ -180,13 +219,13 @@ define : ideque-remove/internal front back
                          ;; a let loop to track the length while
                          ;; reversing. This doubles the cost of
                          ;; removing, but keeps the amortized cost
-                         ;; linear for the worst case access pattern
+                         ;; constant for the worst case access pattern
                          ;; of alternating front-and-back.
-                         let-values : : (front back-reversed) : split-at reversed : floor/ (* count 2) 3
+                         let-values : : (new-front new-back-reversed) : split-at reversed : floor/ (* count 2) 3
                              values
-                                 . front
-                                 reverse back-reversed
-                                 car back
+                                 cons (car back) new-front
+                                 reverse new-back-reversed
+                                 car front
                    loop
                        + count 1
                        cons (car back) reversed
@@ -204,10 +243,14 @@ define : ideque-remove-front ideq
                 ideque-remove-front : make-ideque '(1) '()
             test-equal : ideque '()
                 ideque-remove-front : make-ideque '() '(1)
-            test-equal '(1)
-                ideque->list : ideque-remove-front : make-ideque '() '(1 2)
             test-equal '(2)
-                ideque->list : ideque-remove-front : make-ideque '(1 2) '()
+                ideque->list : ideque-remove-front : make-ideque '(1) '(2)
+            test-equal '(2)
+                ideque->list : ideque-remove-front : ideque '(1 2)
+            test-equal '(2 3)
+                ideque->list : ideque-remove-front : make-ideque '(1) '(3 2)
+            test-equal '(2 3)
+                ideque->list : ideque-remove-front : make-ideque '(1 2) '(3)
             test-error
                 ideque-remove-front : ideque '()
     define-values : front back value
@@ -226,8 +269,12 @@ define : ideque-remove-back ideq
                 ideque-remove-back : make-ideque '(1) '()
             test-equal : ideque '()
                 ideque-remove-back : make-ideque '() '(1)
-            test-equal '(2)
-                ideque->list : ideque-remove-back : make-ideque '() '(1 2)
+            test-equal '(1 2)
+                ideque->list : ideque-remove-back : make-ideque '(1) '(3 2)
+            test-equal '(1 2)
+                ideque->list : ideque-remove-back : make-ideque '(1 2) '(3)
+            test-equal '(1)
+                ideque->list : ideque-remove-back : make-ideque '(1) '(2)
             test-error
                 ideque-remove-back : ideque '()
     define-values : back front value
@@ -282,10 +329,27 @@ define : ideque elements
     . "Returns an ideque containing the elements. The first element (if any) will be at the front of the ideque and the last element (if any) will be at the back. Takes O(n) time, where n is the number of elements. "
     ##
         tests
-            ;; the ideque is initialized with a filled back, because it is most likely used as a fifo
-            test-equal '(World Hello)
+            ;; One element is in front, rest is in the back to avoid
+            ;; O(N) access to the front, if elements are repeatedly
+            ;; added to the back and the front is only accessed but
+            ;; never removed
+            test-equal '(World)
                   ideque-back-elements : ideque '(Hello World)
-    make-ideque (list) : reverse elements
+            test-equal '()
+                  ideque-back-elements : ideque '()
+            test-equal '(3 2)
+                  ideque-back-elements : ideque '(1 2 3)
+            test-equal '(1)
+                  ideque-front-elements : ideque '(1 2 3)
+            test-equal '(2)
+                  ideque-back-elements : ideque '(1 2)
+            test-equal '(1)
+                  ideque-front-elements : ideque '(1 2)
+    if : null? elements
+        make-ideque '() '()
+        make-ideque
+            list : car elements
+            reverse : cdr elements
 
 define : ideque-tabulate n proc
     . " Invokes the predicate proc on every exact integer from 0 (inclusive) to n (exclusive). Returns an ideque containing the results in order of generation. Takes O(n) time. "
@@ -306,11 +370,17 @@ define : ideque-unfold stop? mapper successor seed
                     λ(x) x
                     λ(x) : + x 1
                     . 0
-    let loop : (elements-reverse '()) (seed seed)
+    let loop : (front '()) (elements-reverse '()) (seed seed)
         if : stop? seed
-            make-ideque (list) elements-reverse
-            loop : cons (mapper seed) elements-reverse
-                   successor seed
+            make-ideque front elements-reverse
+            ;; first put one element in front to ensure that with 2 or more elements there is no empty list.
+            if : null? front
+                loop : cons (mapper seed) front
+                    . elements-reverse
+                    successor seed
+                loop front
+                    cons (mapper seed) elements-reverse
+                    successor seed
 
 define : ideque-unfold-right stop? mapper successor seed
     . "Invokes the predicate stop? on seed. If it returns false, generate the next result by applying mapper to seed, generate the next seed by applying successor to seed, and repeat the algorithm with the new seed. If stop? returns true, return an ideque containing the results in reverse order of accumulation. Takes O(n) time."
@@ -525,8 +595,10 @@ define : ideque-append . ideqs
         tests
             test-equal '() : ideque->list : ideque-append
             test-equal '(1) : ideque->list : ideque-append (ideque '(1))
+            test-equal '(2 3 4) : ideque->list : ideque-remove-front : ideque-append (ideque '())  (ideque '(1 2 3 4))
             test-equal '(1 2 3) : ideque->list : ideque-append (ideque '(1 2 3))
-            test-equal '(1 2 3) : ideque->list : ideque-append (make-ideque '() '(3 2 1))
+            test-equal '(1 2 3) : ideque->list : ideque-append (make-ideque '(1) '(3 2))
+            test-equal '(1 2 3 4) : ideque->list : ideque-append (make-ideque '(1) '(3 2)) (ideque '(4))
             test-equal '(1 2 3 4 5) : ideque->list : ideque-append (make-ideque '(1) '(3 2)) (ideque '(4 5))
             test-equal (iota 10) : ideque->list : apply ideque-append : map ideque : map list : iota 10
     cond
@@ -538,16 +610,36 @@ define : ideque-append . ideqs
               ideque-front-elements ideq
               ideque-back-elements ideq
         else
-            make-ideque
-                ideque-front-elements : car ideqs
-                fold 
-                    λ : ideq elements ;; append takes time relative to the elements in all lists but the last
-                        append : reverse : ideque-front-elements ideq
-                                 ideque-back-elements ideq
-                                 . elements
-                    ;; use the first ideq as initial elements to avoid one reversing and appending operation
-                    ideque-back-elements : car ideqs
-                    cdr ideqs
+            ;; ensure that if there is at least one non-empty ideque, at least one element is in the front
+            let loop : (front (ideque-front-elements (car ideqs))) (back (ideque-back-elements (car ideqs))) (ideqs ideqs)
+                cond
+                    : and (null? front) (null? back)
+                      loop
+                          ideque-front-elements (car (cdr ideqs))
+                          ideque-back-elements (car (cdr ideqs))
+                          cdr ideqs
+                    : and (null? front) (null? (cdr back))
+                        ;; move the single back element to front: now whatever happens to back the ideque is legal
+                        loop back front ideqs
+                    : null? front
+                      let : : back-reversed-without-first : reverse : cdr back
+                          ;; the minimal legal ideque: keep one element in back, move the rest to front.
+                          loop
+                              . back-reversed-without-first
+                              car back
+                              . ideqs
+                    else
+                        ;; front is not null?, we just aggregate everything on back
+                        make-ideque
+                            . front
+                            fold
+                                λ : ideq elements ;; append takes time relative to the elements in all lists but the last
+                                    append : ideque-back-elements ideq
+                                        reverse : ideque-front-elements ideq
+                                        . elements
+                                ;; use the first ideq as initial elements to avoid one reversing and appending operation
+                                . back
+                                cdr ideqs
 
 
 define : ideque-reverse ideq
@@ -591,13 +683,61 @@ define : ideque-zip . ideques
                         ideque '(21 22 23)
     list->ideque : apply zip : map ideque->list ideques
 
+define : make-balanced-ideque/internal front back
+    . "create a legal ideque, moving elements between front and back if necessary to keep O(1) for all access patterns"
+    ##
+        tests
+            test-equal
+                make-ideque '(1) '(2)
+                make-balanced-ideque/internal '() '(2 1)
+            test-equal
+                make-ideque '(1) '(2)
+                make-balanced-ideque/internal '(1 2) '()
+            test-equal ;; minimal safety
+                make-ideque '(1) '(7 6 5 4 3 2)
+                make-balanced-ideque/internal '(1 2 3 4 5 6 7) '()
+            test-equal ;; minimal safety
+                make-ideque '(1 2 3 4 5 6) '(7)
+                make-balanced-ideque/internal '() '(7 6 5 4 3 2 1)
+    cond
+        : null? front
+          cond
+              ;; empty ideques stay unchanged
+              : null? back
+                make-ideque front back
+              ;; single element ideques stay unchanged
+              : null? : cdr back
+                make-ideque front back
+              ;; shift from back to front
+              else
+                make-ideque
+                    reverse : cdr back
+                    list : car back
+        : null? back
+          cond
+              ;; empty ideques stay unchanged
+              : null? front
+                make-ideque front back
+              ;; single element ideques stay unchanged
+              : null? : cdr front
+                make-ideque front back
+              ;; shift from front to back
+              else
+                make-ideque
+                    list : car front
+                    reverse : cdr front
+        ;; ideques without empty side stay unchanged
+        else
+          make-ideque front back
+         
+
 define-syntax-rule : ideque-operate-on-elements/internal ideq proc args ...
-    make-ideque
+    make-balanced-ideque/internal
         proc args ... : ideque-front-elements ideq
         proc args ... : ideque-back-elements ideq
 
 define-syntax-rule : ideque-operate-on-elements-right/internal ideq proc args ...
-    make-ideque
+    make-balanced-ideque/internal
         proc args ... : ideque-back-elements ideq
         proc args ... : ideque-front-elements ideq
 
@@ -713,8 +853,8 @@ define : ideque-partition proc ideq
         : (true-front false-front) : partition proc : ideque-front-elements ideq
           (true-back false-back) : partition proc : ideque-back-elements ideq
         values
-            make-ideque true-front true-back
-            make-ideque false-front false-back
+            make-balanced-ideque/internal true-front true-back
+            make-balanced-ideque/internal false-front false-back
 
 define : ideque-find/internal pred front-elements back-elements . failure
     define found
@@ -830,7 +970,7 @@ define : ideque-span pred ideq
     let loop : (res (ideque '())) (ideq ideq)
         if : or (ideque-empty? ideq) : not : pred : ideque-front ideq
             values res ideq
-            loop 
+            loop
                 ideque-add-back res : ideque-front ideq
                 ideque-remove-front ideq
 
@@ -891,20 +1031,20 @@ define : ideque-pop-front ideq
         tests
             test-equal : cons (ideque '()) 1
                 ideque-pop-front : make-ideque '(1) '()
-            test-equal : cons (ideque '()) 1
+            test-equal : cons (ideque '()) 2
                 ideque-pop-front
-                    car : ideque-pop-front : make-ideque '() '(1 2)
+                    car : ideque-pop-front : ideque '(1 2)
             test-equal #f
                 ideque-pop-front : ideque '()
     define-values : front back value
         ideque-remove/internal
             ideque-front-elements ideq
             ideque-back-elements ideq
-    if : not front
-       . #f
+    if front ;; legal ideque
        cons
            make-ideque front back
            . value
+       . #f
 
 define : ideque-pop-front! ideq
     . "Returns a cons of the ideque with the front element of ideque removed and the retrieved value, similar to assoc. Returns #f for an empty ideque. Takes O(1) time."
@@ -912,9 +1052,9 @@ define : ideque-pop-front! ideq
         tests
             test-equal : cons (ideque '()) 1
                 ideque-pop-front : make-ideque '(1) '()
-            test-equal : cons (ideque '()) 1
+            test-equal : cons (ideque '()) 2
                 ideque-pop-front
-                    car : ideque-pop-front : make-ideque '() '(1 2)
+                    car : ideque-pop-front : make-ideque '(1) '(2)
             test-equal #f
                 ideque-pop-front : ideque '()
     define-values : front back value
