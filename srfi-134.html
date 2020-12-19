@@ -42,7 +42,7 @@ This SRFI defines immutable deques. A deque is a double-ended queue, a sequence 
 <h1>Rationale</h1>
 
 <p>
-A double-ended queue, or <em>deque</em> (pronounced "deck") is a sequential data structure which allows elements to be added or removed from either end in amortized O(1) time.  It is a generalization of both a queue and a stack, and can be used as either by disregarding the irrelevant procedures.  
+A double-ended queue, or <em>deque</em> (pronounced "deck") is a sequential data structure which allows elements to be added or removed from either end in amortized O(1) time.  It is a generalization of both a queue and a stack, and can be used as either by disregarding the irrelevant procedures.
 </p>
 <p>
 This SRFI describes immutable deques, or <em>ideques</em>.  Immutable structures are sometimes called <em>persistent</em> and are closely related to <em>pure functional</em> (a.k.a. <em>pure</em>) structures. The availability of immutable data structures facilitates writing efficient programs in the pure-functional style.
@@ -50,7 +50,7 @@ Immutable deques can also be seen as a bidirectional generalization of immutable
 Unlike the immutable lists of <a href="https://srfi.schemers.org/srfi-116/srfi-116.html">SRFI 116</a>, it is efficient to produce modified versions of an ideque; unlike the list queues of <a class="ext-link" href="http://srfi.schemers.org/srfi-117/srfi-117.html">SRFI 117</a>, it is possible to efficiently return an updated version of an ideque without mutating any earlier versions of it.
 </p>
 <p>
-The specification was designed jointly by Kevin Wortman and John Cowan.  John Cowan is the editor and shepherd.  The two-list implementation was written by John Cowan.</p>
+The specification was designed jointly by Kevin Wortman and John Cowan.  John Cowan is the editor and shepherd.  The two-list implementation was written by Shiro Kawai.</p>
 
 <h1>Procedure index</h1>
 
@@ -80,7 +80,7 @@ ideque-drop-while, ideque-drop-while-right, ideque-span, ideque-break</code></p>
 <h1>Specification</h1>
 
 <p>
-We specify required time efficiency upper bounds using big-O notation. We note when, in some cases, there is "slack" between the required bound and the theoretically optimal bound for an operation. Implementations may use data structures with amortized time bounds, but should document which bounds hold in only an amortized sense. 
+We specify required time efficiency upper bounds using big-O notation. We note when, in some cases, there is "slack" between the required bound and the theoretically optimal bound for an operation. Implementations may use data structures with amortized time bounds, but should document which bounds hold in only an amortized sense.
 </p>
 <p>
 Deques are disjoint from all other Scheme types.
@@ -129,15 +129,15 @@ Returns <tt>#t</tt> if <em>ideque</em> contains zero elements, and <tt>#f</tt> o
 <p>
 Determines ideque equality, given an element-equality procedure. Ideque A equals ideque B if they are of the same length, and their corresponding elements are equal, as determined by <i>elt=</i>. If the element-comparison procedure's first argument is from <em>ideque<sub>i</sub></em>, then its second argument is from <em>ideque<sub>i+1</sub></em>, i.e. it is always called as <code>(</code><em>elt= a b</em><code>)</code> for <em>a</em> an element of ideque A, and <em>b</em> an element of ideque B.</p>
 <p>
-In the n-ary case, every <em>ideque<sub>i</sub></em> is compared to <em>ideque<sub>i+1</sub></em> (as opposed, for example, to comparing <em>ideque<sub>1</sub></em> to every <em>ideque<sub>i</sub></em>, for i > 1). If there are zero or one ideque arguments, <code>ideque=</code> simply returns true. 
-The name does not end in a question mark for compatibility with the SRFI-1 procedure <code>list=</code>. 
+In the n-ary case, every <em>ideque<sub>i</sub></em> is compared to <em>ideque<sub>i+1</sub></em> (as opposed, for example, to comparing <em>ideque<sub>1</sub></em> to every <em>ideque<sub>i</sub></em>, for i > 1). If there are zero or one ideque arguments, <code>ideque=</code> simply returns true.
+The name does not end in a question mark for compatibility with the SRFI-1 procedure <code>list=</code>.
 </p>
 <p>
-Note that the dynamic order in which the <em>elt=</em> procedure is applied to pairs of elements is not specified. For example, if <code>ideque=</code> is applied to three ideques, A, B, and C, it may first completely compare A to B, then compare B to C, or it may compare the first elements of A and B, then the first elements of B and C, then the second elements of A and B, and so forth. 
+Note that the dynamic order in which the <em>elt=</em> procedure is applied to pairs of elements is not specified. For example, if <code>ideque=</code> is applied to three ideques, A, B, and C, it may first completely compare A to B, then compare B to C, or it may compare the first elements of A and B, then the first elements of B and C, then the second elements of A and B, and so forth.
 </p>
 <p>
-The equality procedure must be consistent with <code>eq?</code>. 
-Note that this implies that two ideques which are <code>eq?</code> are always <code>ideque=</code>, as well; implementations may exploit this fact to "short-cut" the element-by-element comparisons. 
+The equality procedure must be consistent with <code>eq?</code>.
+Note that this implies that two ideques which are <code>eq?</code> are always <code>ideque=</code>, as well; implementations may exploit this fact to "short-cut" the element-by-element comparisons.
 </p>
 <p>
 <tt>(ideque-any </tt><em>pred ideque</em><tt>)</tt>
@@ -362,7 +362,7 @@ are amortized O(1).  An implementation based on finger trees may be
 added later.</p>
 
 <h1>Copyright</h1>
-Copyright (C) John Cowan, Kevin Wortman (2015).  All Rights Reserved. 
+Copyright (C) John Cowan, Kevin Wortman (2015).  All Rights Reserved.
 
 <p>
   Permission is hereby granted, free of charge, to any person
