@@ -69,13 +69,6 @@
 
 ;;;; Stream utility
 
-(define (stream=? elt= s1 s2)
-  (if (stream-null? s1)
-      (stream-null? s2)
-      (and (stream-pair? s2)
-           (elt= (stream-car s1) (stream-car s2))
-           (stream=? elt= (stream-cdr s1) (stream-cdr s2)))))
-
 (define (stream-count pred s)
   (stream-fold (lambda (n x) (if (pred x) (+ n 1) n))
                0
