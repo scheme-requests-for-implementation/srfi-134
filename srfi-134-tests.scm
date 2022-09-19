@@ -67,7 +67,9 @@
    (let* ((lis (iota n))
           (dq (list->ideque lis)))
      (for-each (lambda (i)
-                 (test (cons name i)
+                 (test (string-append (symbol->string name)
+                                      " "
+                                      (number->string i))
                        (receive xs (list-op lis i) xs)
                        (receive xs (ideque-op dq i)
                          (map ideque->list xs))))
