@@ -352,8 +352,8 @@
      (%check-ideque dq)
      dq)
     ((dq1 dq2)  ; fast path
-     (%check-ideque dq)
-     (%check-ideque dq)
+     (%check-ideque dq1)
+     (%check-ideque dq2)
      (%ideque-append-binary dq1 dq2))
     (dqs
      (for-each %check-ideque dqs)
