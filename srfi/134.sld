@@ -114,15 +114,6 @@
            (lambda (x) (lp (stream-cdr s) x)))
           (else #f))))
 
-;; Compare two streams up to whichever shorter one.
-;; Returns the compare result and the tails of uncompared streams.
-(define (stream-prefix= elt= a b)
-  (let loop ((a a) (b b))
-    (cond ((or (stream-null? a) (stream-null? b)) (values #t a b))
-          ((elt= (stream-car a) (stream-car b))
-           (loop (stream-cdr a) (stream-cdr b)))
-          (else (values #f a b)))))
-
 ;; Compare two streams for equality using 'elt=' to compare elements.
 (define (stream=? elt= s1 s2)
   (if (stream-null? s1)
@@ -275,30 +266,24 @@
 (define ideque=
   (case-lambda
     ((elt=) #t)
-    ((elt= ideque) (%check-ideque ideque) #t)
-    ((elt= dq1 dq2) (%ideque=-binary elt= dq1 dq2))
-    ((elt= . dqs)
-     ;; The comparison scheme is the same as srfi-1's list=.
-     (apply list= elt= (map ideque->list dqs)))))
+    ((elt= dq1 . dqs)
+     (or (every ideque-empty? (cons dq1 dqs))
+         (every (lambda (dq) (%ideque=-binary elt= dq dq1))
+                dqs)))))
 
 (define (%ideque-same-length dq1 dq2)
   (= (ideque-length dq1) (ideque-length dq2)))
 
-;; we optimize two-arg case
 (define (%ideque=-binary elt= dq1 dq2)
   (%check-ideque dq1)
   (%check-ideque dq2)
   (or (eq? dq1 dq2)
       (and (%ideque-same-length dq1 dq2)
-           (receive (x t1 t2)
-                    (stream-prefix= elt= (dq-f dq1) (dq-f dq2))
-             (and x
-                  (receive (y r1 r2)
-                           (stream-prefix= elt= (dq-r dq1) (dq-r dq2))
-                    (and y
-                         (if (null? t1)
-                             (stream=? elt= t2 (stream-reverse r1))
-                             (stream=? elt= t1 (stream-reverse r2))))))))))
+           (stream=? elt=
+                     (stream-append (dq-f dq1)
+                                    (stream-reverse (dq-r dq1)))
+                     (stream-append (dq-f dq2)
+                                    (stream-reverse (dq-r dq2)))))))
 
 
 (define (ideque-ref dq n)
