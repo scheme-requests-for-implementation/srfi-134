@@ -1,5 +1,5 @@
 ;;;  Copyright (c) 2015  Shiro Kawai  <shiro@acm.org>
-;;;  Copyright © 2022 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+;;;  Copyright (c) 2022 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
 ;;;
 ;;;  Permission is hereby granted, free of charge, to any person
 ;;;  obtaining a copy of this software and associated documentation files
