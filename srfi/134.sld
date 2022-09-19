@@ -299,8 +299,8 @@
         (lenr (dq-lenr dq)))
     (if (<= n lenf)
         (make-deque n (stream-take n f) 0 stream-null)
-        (let ((lenr. (- lenr (- n lenf))))
-          (make-deque lenf f lenr. (stream-drop lenr. (dq-r dq)))))))
+        (let ((k (- lenr (- n lenf))))
+          (make-deque lenf f (- lenr k) (stream-drop k (dq-r dq)))))))
 
 (define (%ideque-drop dq n)             ; n is within the range
   (let ((lenf (dq-lenf dq))
