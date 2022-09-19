@@ -1,6 +1,15 @@
 (cond-expand
   (chicken
-   (import test (srfi 1) (srfi 134) (srfi 158))))
+   (import test
+           (srfi 1)
+           (srfi 134)
+           (srfi 158)))
+  (else   ; generic R7RS implementation with SRFI 64
+   (import (scheme base)
+           (srfi 1)
+           (srfi 64)
+           (srfi 134)
+           (srfi 158))))
 
 (test-group "ideque"
 
