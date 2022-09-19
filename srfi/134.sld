@@ -346,10 +346,29 @@
   (%check-ideque dq)
   (+ (dq-lenf dq) (dq-lenr dq)))
 
-(define (ideque-append . dqs)
-  ;; We could save some list copying by carefully split dqs into front and
-  ;; rear groups and append separately, but for now we don't bother...
-  (list->ideque (concatenate (map ideque->list dqs))))
+(define ideque-append
+  (case-lambda
+    ((dq)
+     (%check-ideque dq)
+     dq)
+    ((dq1 dq2)  ; fast path
+     (%check-ideque dq)
+     (%check-ideque dq)
+     (%ideque-append-binary dq1 dq2))
+    (dqs
+     (for-each %check-ideque dqs)
+     (list->ideque (concatenate (map ideque->list dqs))))))
+
+(define (%ideque-append-binary dq1 dq2)
+  (cond ((zero? (ideque-length dq1)) dq2)
+        ((zero? (ideque-length dq2)) dq1)
+        (else
+         (make-deque (ideque-length dq1)
+                     (stream-append (dq-f dq1)
+                                    (stream-reverse (dq-r dq1)))
+                     (ideque-length dq2)
+                     (stream-append (dq-r dq2)
+                                    (stream-reverse (dq-f dq2)))))))
 
 (define (ideque-count pred dq)
   (%check-ideque dq)
