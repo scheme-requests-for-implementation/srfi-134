@@ -353,13 +353,12 @@ more values to return.
 
 <h1>Implementation</h1>
 
-<p>The sample implementation is in the <code>ideque-2list</code> subdirectory of the repository for
-this SRFI.  It is an implementation based on two Scheme lists, one
-for the front and another (in reverse element order) for the back.
-The cost of <code>ideque-front</code>, <code>ideque-back</code>,
-<code>ideque-remove-front</code>, and <code>ideque-remove-back</code>
-are amortized O(1).  An implementation based on finger trees may be
-added later.</p>
+<p>The sample implementation is in the <code>srfi</code> subdirectory of the repository for
+this SRFI.  It uses a two-stream banker's deque structure (see
+<em>Purely Functional Data Structures</em> by
+Chris Okasaki, p. 108) which provides amortized O(1) running time
+for basic deque operations.
+An implementation based on finger trees may be added later.</p>
 
 <h1>Copyright</h1>
 Copyright (C) John Cowan, Kevin Wortman (2015).  All Rights Reserved.
