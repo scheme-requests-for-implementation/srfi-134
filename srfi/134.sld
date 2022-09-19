@@ -471,7 +471,7 @@
 (define (%idq-span-break op pred dq)
   (%check-ideque dq)
   (receive (head tail) (op pred (dq-f dq))
-    (if (null? tail)
+    (if (stream-null? tail)
         (receive (head. tail.) (op pred (stream-reverse (dq-r dq)))
           (values (make-deque (stream-length head)
                               head
