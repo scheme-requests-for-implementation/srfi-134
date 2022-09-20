@@ -1,6 +1,6 @@
 * SRFI 134: Immutable Deques
 
-** by Kevin Wortman and John Cowan
+** by Kevin Wortman, John Cowan, and Wolfgang Corcoran-Mathe
 
 
 
