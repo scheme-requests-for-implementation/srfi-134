@@ -266,10 +266,12 @@
 (define ideque=
   (case-lambda
     ((elt=) #t)
-    ((elt= dq1 . dqs)
-     (or (every ideque-empty? (cons dq1 dqs))
-         (every (lambda (dq) (%ideque=-binary elt= dq dq1))
-                dqs)))))
+    ((elt= dq1 dq2) ; fast path
+     (%ideque=-binary elt= dq1 dq2))
+    ((elt= . dqs)
+     ;; The comparison scheme is the same as srfi-1's list=.
+     ;; This could be tuned.
+     (apply list= elt= (map ideque->list dqs)))))
 
 (define (%ideque-same-length dq1 dq2)
   (= (ideque-length dq1) (ideque-length dq2)))
