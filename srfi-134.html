@@ -14,7 +14,7 @@ Immutable Deques
 
 <h1>Author</h1>
 
-Kevin Wortman, John Cowan
+Kevin Wortman, John Cowan, Wolfgang Corcoran-Mathe
 
 <h1>Status</h1>
 
@@ -32,6 +32,12 @@ Kevin Wortman, John Cowan
   <li>Draft #8 published: 2016-05-09</li>
   <li>Draft #9 published: 2016-05-28</li>
   <li>Finalized: 2016-07-01</li>
+  <li id="pfn1"><b>Post-finalization note added on 2021-09-20</b>:
+    Because the original implementation based on lists, by John Cowan,
+    was found to be non-conformant, the present implementation by
+    Wolfgang Corcoran-Mathe has replaced it, and his name has been
+    added to the list of authors.  The new implementation’s basic
+    ideque operations run in amortized O(1) time.</li>
 </ul>
 
 <h1>Abstract</h1>
@@ -50,7 +56,7 @@ Immutable deques can also be seen as a bidirectional generalization of immutable
 Unlike the immutable lists of <a href="https://srfi.schemers.org/srfi-116/srfi-116.html">SRFI 116</a>, it is efficient to produce modified versions of an ideque; unlike the list queues of <a class="ext-link" href="http://srfi.schemers.org/srfi-117/srfi-117.html">SRFI 117</a>, it is possible to efficiently return an updated version of an ideque without mutating any earlier versions of it.
 </p>
 <p>
-The specification was designed jointly by Kevin Wortman and John Cowan.  John Cowan is the editor and shepherd.  The two-list implementation was written by Shiro Kawai.</p>
+The specification was designed jointly by Kevin Wortman and John Cowan.  John Cowan is the editor and shepherd.  The two-list implementation was written by Shiro Kawai.  The current sample implementation, which was based on that, was written by Wolfgang Corcoran-Mathe.</p>
 
 <h1>Procedure index</h1>
 
