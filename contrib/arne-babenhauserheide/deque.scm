@@ -234,20 +234,20 @@ fi
 (define (ideque-remove-front ideq)
     "Returns an ideque with the front element of ideque removed. It is an error for ideque to be empty. Takes O(1) time."
     #((tests
-            (test-equal (ideque '())
+            (test-equal (apply ideque '())
                 (ideque-remove-front (make-ideque '(1) '())))
-            (test-equal (ideque '())
+            (test-equal (apply ideque '())
                 (ideque-remove-front (make-ideque '() '(1))))
             (test-equal '(2)
                 (ideque->list (ideque-remove-front (make-ideque '(1) '(2)))))
             (test-equal '(2)
-                (ideque->list (ideque-remove-front (ideque '(1 2)))))
+                (ideque->list (ideque-remove-front (apply ideque '(1 2)))))
             (test-equal '(2 3)
                 (ideque->list (ideque-remove-front (make-ideque '(1) '(3 2)))))
             (test-equal '(2 3)
                 (ideque->list (ideque-remove-front (make-ideque '(1 2) '(3)))))
             (test-error
-                (ideque-remove-front (ideque '())))))
+                (ideque-remove-front (apply ideque '())))))
     (define-values (front back value)
         (ideque-remove/internal
             (ideque-front-elements ideq)
@@ -259,9 +259,9 @@ fi
 (define (ideque-remove-back ideq)
     "Returns an ideque with the back element of ideque removed. It is an error for ideque to be empty. Takes O(1) time."
     #((tests
-            (test-equal (ideque '())
+            (test-equal (apply ideque '())
                 (ideque-remove-back (make-ideque '(1) '())))
-            (test-equal (ideque '())
+            (test-equal (apply ideque '())
                 (ideque-remove-back (make-ideque '() '(1))))
             (test-equal '(1 2)
                 (ideque->list (ideque-remove-back (make-ideque '(1) '(3 2)))))
@@ -270,7 +270,7 @@ fi
             (test-equal '(1)
                 (ideque->list (ideque-remove-back (make-ideque '(1) '(2)))))
             (test-error
-                (ideque-remove-back (ideque '())))))
+                (ideque-remove-back (apply ideque '())))))
     (define-values (back front value)
         (ideque-remove/internal
             (ideque-back-elements ideq)
@@ -309,14 +309,14 @@ fi
 (define (ideque->list ideq)
     #((tests
             (test-equal (list 1 2 3)
-                (ideque->list (ideque '(1 2 3))))))
+                (ideque->list (apply ideque '(1 2 3))))))
     (append (ideque-front-elements ideq)
              (reverse (ideque-back-elements ideq))))
 
 (define (list->ideque l)
-    (ideque l))
+    (apply ideque l))
 
-(define (ideque elements)
+(define (ideque . elements)
     "Returns an ideque containing the elements. The first element (if any) will be at the front of the ideque and the last element (if any) will be at the back. Takes O(n) time, where n is the number of elements. "
     #((tests
             ;; One element is in front, rest is in the back to avoid
@@ -324,17 +324,17 @@ fi
             ;; added to the back and the front is only accessed but
             ;; never removed
             (test-equal '(World)
-                  (ideque-back-elements (ideque '(Hello World))))
+                  (ideque-back-elements (apply ideque '(Hello World))))
             (test-equal '()
-                  (ideque-back-elements (ideque '())))
+                  (ideque-back-elements (apply ideque '())))
             (test-equal '(3 2)
-                  (ideque-back-elements (ideque '(1 2 3))))
+                  (ideque-back-elements (apply ideque '(1 2 3))))
             (test-equal '(1)
-                  (ideque-front-elements (ideque '(1 2 3))))
+                  (ideque-front-elements (apply ideque '(1 2 3))))
             (test-equal '(2)
-                  (ideque-back-elements (ideque '(1 2))))
+                  (ideque-back-elements (apply ideque '(1 2))))
             (test-equal '(1)
-                  (ideque-front-elements (ideque '(1 2))))))
+                  (ideque-front-elements (apply ideque '(1 2))))))
     (if (null? elements)
         (make-ideque '() '())
         (make-ideque
@@ -344,9 +344,9 @@ fi
 (define (ideque-tabulate n proc)
     " Invokes the predicate proc on every exact integer from 0 (inclusive) to n (exclusive). Returns an ideque containing the results in order of generation. Takes O(n) time. "
     #((tests
-            (test-equal (ideque '(0 1 2 3))
+            (test-equal (apply ideque '(0 1 2 3))
                 (ideque-tabulate 4 (λ(x) x)))))
-    (ideque (map proc (iota n))))
+    (apply ideque (map proc (iota n))))
 
 (define (ideque-unfold stop? mapper successor seed)
     "Invokes the predicate stop? on seed. If it returns false, generate the next result by applying mapper to seed, generate the next seed by applying successor to seed, and repeat this algorithm with the new seed. If stop? returns true, return an ideque containing the results in order of accumulation. Takes O(n) time. "
@@ -382,15 +382,15 @@ fi
                     0)))))
     (let loop ((elements-reverse '()) (seed seed))
         (if (stop? seed)
-            (ideque elements-reverse)
+            (apply ideque elements-reverse)
             (loop (cons (mapper seed) elements-reverse)
                    (successor seed)))))
 
 (define (ideque-empty? ideq)
     "Returns #t if ideque contains zero elements, and #f otherwise. Takes O(1) time. "
     #((tests
-            (test-equal #t (ideque-empty? (ideque '())))
-            (test-equal #f (ideque-empty? (ideque '(1))))
+            (test-equal #t (ideque-empty? (apply ideque '())))
+            (test-equal #f (ideque-empty? (apply ideque '(1))))
             (test-equal #t (ideque-empty? (make-ideque '() '())))
             (test-equal #f (ideque-empty? (make-ideque '(1) '())))
             (test-equal #f (ideque-empty? (make-ideque '() '(1))))
@@ -400,8 +400,8 @@ fi
 
 (define (ideque= elt= . ideques)
     #((tests
-            (test-equal #f (ideque= = (ideque '(1 2)) (ideque '(1 3))))
-            (test-equal #f (ideque= = (ideque '(1 2)) (ideque '(1))))))
+            (test-equal #f (ideque= = (apply ideque '(1 2)) (apply ideque '(1 3))))
+            (test-equal #f (ideque= = (apply ideque '(1 2)) (apply ideque '(1))))))
     (if
        (or (null? ideques)
             (null? (cdr ideques)))
@@ -423,12 +423,12 @@ fi
 (define (ideque-any pred ideq)
     "Invokes pred on the elements of the ideque in order until one call returns a true value, which is then returned. If there are no elements, returns #f. Takes O(n) time."
     #((tests
-            (test-equal #t (ideque-any zero? (ideque '(0 0 0))))
-            (test-equal #t (ideque-any zero? (ideque '(0 1 0))))
-            (test-equal #t (ideque-any zero? (ideque '(1 0))))
-            (test-equal #f (ideque-any zero? (ideque '())))
-            (test-equal #f (ideque-any zero? (ideque '(1))))
-            (test-equal #f (ideque-any zero? (ideque '(1 1))))))
+            (test-equal #t (ideque-any zero? (apply ideque '(0 0 0))))
+            (test-equal #t (ideque-any zero? (apply ideque '(0 1 0))))
+            (test-equal #t (ideque-any zero? (apply ideque '(1 0))))
+            (test-equal #f (ideque-any zero? (apply ideque '())))
+            (test-equal #f (ideque-any zero? (apply ideque '(1))))
+            (test-equal #f (ideque-any zero? (apply ideque '(1 1))))))
     (if (ideque-empty? ideq) #f
       (let loop
           ((front (ideque-front-elements ideq))
@@ -446,12 +446,12 @@ fi
 (define (ideque-every pred ideq)
     "Invokes pred on the elements of the ideque in order until one call returns a false value, which is then returned. If there are no elements, returns #t. Takes O(n) time."
     #((tests
-            (test-equal #t (ideque-every zero? (ideque '(0 0 0))))
-            (test-equal #f (ideque-every zero? (ideque '(0 1 0))))
-            (test-equal #f (ideque-every zero? (ideque '(1 0))))
-            (test-equal #t (ideque-every zero? (ideque '())))
-            (test-equal #f (ideque-every zero? (ideque '(1))))
-            (test-equal #f (ideque-every zero? (ideque '(1 1))))))
+            (test-equal #t (ideque-every zero? (apply ideque '(0 0 0))))
+            (test-equal #f (ideque-every zero? (apply ideque '(0 1 0))))
+            (test-equal #f (ideque-every zero? (apply ideque '(1 0))))
+            (test-equal #t (ideque-every zero? (apply ideque '())))
+            (test-equal #f (ideque-every zero? (apply ideque '(1))))
+            (test-equal #f (ideque-every zero? (apply ideque '(1 1))))))
     (if (ideque-empty? ideq) #t
       (let loop
           ((front (ideque-front-elements ideq))
@@ -469,10 +469,10 @@ fi
 (define (ideque-ref ideq n)
     "Returns the nth element of ideque. It is an error unless n is less than the length of ideque. Takes O(n) time."
     #((tests
-            (test-error (ideque-ref (ideque '()) 0))
-            (test-equal 1 (ideque-ref (ideque '(1)) 0))
-            (test-equal 'b (ideque-ref (ideque '(a b)) 1))
-            (test-error (ideque-ref (ideque '(a b)) 2))))
+            (test-error (ideque-ref (apply ideque '()) 0))
+            (test-equal 1 (ideque-ref (apply ideque '(1)) 0))
+            (test-equal 'b (ideque-ref (apply ideque '(a b)) 1))
+            (test-error (ideque-ref (apply ideque '(a b)) 2))))
     (let loop ((q ideq) (n n))
         (if (zero? n)
              (ideque-front q)
@@ -482,10 +482,10 @@ fi
 (define (ideque-take ideq n)
     "Returns an ideque containing the first n elements of ideque. It is an error if n is greater than the length of ideque. Takes O(n) time."
     #((tests
-            (test-error (ideque-take (ideque '()) 1))
-            (test-equal '() (ideque-take (ideque '(1)) 0))
-            (test-equal '(a) (ideque-take (ideque '(a b)) 1))
-            (test-error (ideque-take (ideque '(a b)) 3))))
+            (test-error (ideque-take (apply ideque '()) 1))
+            (test-equal '() (ideque-take (apply ideque '(1)) 0))
+            (test-equal '(a) (ideque-take (apply ideque '(a b)) 1))
+            (test-error (ideque-take (apply ideque '(a b)) 3))))
     (let loop ((q ideq) (n n) (res '()))
         (if (zero? n)
              (reverse! res)
@@ -498,10 +498,10 @@ fi
 (define (ideque-take-right ideq n)
     "Returns an ideque containing the last n elements of ideque. It is an error if n is greater than the length of ideque. Takes O(n) time."
     #((tests
-            (test-error (ideque-take (ideque '()) 1))
-            (test-equal '() (ideque-take-right (ideque '(1)) 0))
-            (test-equal '(b) (ideque-take-right (ideque '(a b)) 1))
-            (test-error (ideque-take (ideque '(a b)) 3))))
+            (test-error (ideque-take (apply ideque '()) 1))
+            (test-equal '() (ideque-take-right (apply ideque '(1)) 0))
+            (test-equal '(b) (ideque-take-right (apply ideque '(a b)) 1))
+            (test-error (ideque-take (apply ideque '(a b)) 3))))
     (let loop ((q ideq) (n n) (res '()))
         (if (zero? n)
              (reverse! res)
@@ -514,10 +514,10 @@ fi
 (define (ideque-drop ideq n)
     "Returns an ideque containing all but the first n elements of ideque. It is an error if n is greater than the length of ideque. Takes O(n) time. "
     #((tests
-            (test-error (ideque-drop (ideque '()) 1))
-            (test-equal '(1) (ideque->list (ideque-drop (ideque '(1)) 0)))
-            (test-equal '(b) (ideque->list (ideque-drop (ideque '(a b)) 1)))
-            (test-error (ideque-drop (ideque '(a b)) 3))))
+            (test-error (ideque-drop (apply ideque '()) 1))
+            (test-equal '(1) (ideque->list (ideque-drop (apply ideque '(1)) 0)))
+            (test-equal '(b) (ideque->list (ideque-drop (apply ideque '(a b)) 1)))
+            (test-error (ideque-drop (apply ideque '(a b)) 3))))
     (let loop ((q ideq) (n n))
         (if (zero? n)
              q
@@ -527,10 +527,10 @@ fi
 (define (ideque-drop-right ideq n)
     "Returns an ideque containing all but the last n elements of ideque. It is an error if n is greater than the length of ideque. Takes O(n) time. "
     #((tests
-            (test-error (ideque-drop (ideque '()) 1))
-            (test-equal '(1) (ideque->list (ideque-drop-right (ideque '(1)) 0)))
-            (test-equal '(a b) (ideque->list (ideque-drop-right (ideque '(a b c)) 1)))
-            (test-error (ideque-drop (ideque '(a b)) 3))))
+            (test-error (ideque-drop (apply ideque '()) 1))
+            (test-equal '(1) (ideque->list (ideque-drop-right (apply ideque '(1)) 0)))
+            (test-equal '(a b) (ideque->list (ideque-drop-right (apply ideque '(a b c)) 1)))
+            (test-error (ideque-drop (apply ideque '(a b)) 3))))
     (let loop ((q ideq) (n n))
         (if (zero? n)
              q
@@ -540,11 +540,11 @@ fi
 (define (ideque-split-at ideq n)
     "Returns an ideque containing the first n elements of ideque. It is an error if n is greater than the length of ideque. Takes O(n) time."
     #((tests
-            (test-error (ideque-split-at (ideque '()) 1))
-            (test-equal '() (ideque-split-at (ideque '(1)) 0))
-            (test-equal '(a) (ideque-split-at (ideque '(a b c)) 1))
-            (test-equal '(b c) (call-with-values (λ() (ideque-split-at (ideque '(a b c)) 1)) (λ(x y) y)))
-            (test-error (ideque-split-at (ideque '(a b)) 3))))
+            (test-error (ideque-split-at (apply ideque '()) 1))
+            (test-equal '() (ideque-split-at (apply ideque '(1)) 0))
+            (test-equal '(a) (ideque-split-at (apply ideque '(a b c)) 1))
+            (test-equal '(b c) (call-with-values (λ() (ideque-split-at (apply ideque '(a b c)) 1)) (λ(x y) y)))
+            (test-error (ideque-split-at (apply ideque '(a b)) 3))))
     (let loop ((q ideq) (n n) (res '()))
         (if (zero? n)
              (values
@@ -559,9 +559,9 @@ fi
 (define (ideque-length ideq)
     "Returns the length of ideque as an exact integer. Takes O(n) time."
     #((tests
-            (test-equal 2 (ideque-length (ideque '(1 2))))
+            (test-equal 2 (ideque-length (apply ideque '(1 2))))
             (test-equal 3 (ideque-length (make-ideque '(1 2) '(1))))
-            (test-equal 0 (ideque-length (ideque '())))))
+            (test-equal 0 (ideque-length (apply ideque '())))))
     (+ (length (ideque-front-elements ideq))
         (length (ideque-back-elements ideq))))
 
@@ -569,16 +569,16 @@ fi
     "Returns an ideque with the contents of the ideque followed by the others, or an empty ideque if there are none. Takes O(kn) time, where k is the number of ideques and n is the number of elements involved. For ideques that have all elements in the back elements, the time can be O(n - m), with m the elements in the last ideque, as for append."
     #((tests
             (test-equal '() (ideque->list (ideque-append)))
-            (test-equal '(1) (ideque->list (ideque-append (ideque '(1)))))
-            (test-equal '(2 3 4) (ideque->list (ideque-remove-front (ideque-append (ideque '())  (ideque '(1 2 3 4))))))
-            (test-equal '(1 2 3) (ideque->list (ideque-append (ideque '(1 2 3)))))
+            (test-equal '(1) (ideque->list (ideque-append (apply ideque '(1)))))
+            (test-equal '(2 3 4) (ideque->list (ideque-remove-front (ideque-append (apply ideque '())  (apply ideque '(1 2 3 4))))))
+            (test-equal '(1 2 3) (ideque->list (ideque-append (apply ideque '(1 2 3)))))
             (test-equal '(1 2 3) (ideque->list (ideque-append (make-ideque '(1) '(3 2)))))
-            (test-equal '(1 2 3 4) (ideque->list (ideque-append (make-ideque '(1) '(3 2)) (ideque '(4)))))
-            (test-equal '(1 2 3 4 5) (ideque->list (ideque-append (make-ideque '(1) '(3 2)) (ideque '(4 5)))))
-            (test-equal (iota 10) (ideque->list (apply ideque-append (map ideque (map list (iota 10))))))))
+            (test-equal '(1 2 3 4) (ideque->list (ideque-append (make-ideque '(1) '(3 2)) (apply ideque '(4)))))
+            (test-equal '(1 2 3 4 5) (ideque->list (ideque-append (make-ideque '(1) '(3 2)) (apply ideque '(4 5)))))
+            (test-equal (iota 10) (ideque->list (apply ideque-append (map (λ (x) (apply ideque x)) (map list (iota 10))))))))
     (cond
         ((null? ideqs)
-          (ideque '()))
+          (apply ideque '()))
         ((null? (cdr ideqs))
           (let ((ideq (car ideqs)))
             (make-ideque
@@ -620,10 +620,10 @@ fi
 (define (ideque-reverse ideq)
     "Returns an ideque containing the elements of ideque in reverse order. Takes O(1) time. "
     #((tests
-            (test-equal (ideque->list (ideque '(3 2 1)))
-                (ideque->list (ideque-reverse (ideque '(1 2 3)))))
-            (test-equal (ideque->list (ideque '(x a v)))
-                (ideque->list (ideque-reverse (ideque '(v a x)))))))
+            (test-equal (ideque->list (apply ideque '(3 2 1)))
+                (ideque->list (ideque-reverse (apply ideque '(1 2 3)))))
+            (test-equal (ideque->list (apply ideque '(x a v)))
+                (ideque->list (ideque-reverse (apply ideque '(v a x)))))))
     (make-ideque
         (ideque-back-elements ideq)
         (ideque-front-elements ideq)))
@@ -632,11 +632,11 @@ fi
     "Pred is a procedure taking a single value and returning a single value. It is applied element-wise to the elements of ideque, and a count is tallied of the number of elements that produce a true value. This count is returned. Takes O(n) time. The dynamic order of calls to pred is unspecified."
     #((tests
             (test-equal 3
-                (ideque-count zero? (ideque '(1 3 5 9 0 7 4 0 3 0))))
+                (ideque-count zero? (apply ideque '(1 3 5 9 0 7 4 0 3 0))))
             (test-equal 2
-                (ideque-count even? (ideque '(1 2 3 4 5))))
+                (ideque-count even? (apply ideque '(1 2 3 4 5))))
             (test-equal 3
-                (ideque-count odd? (ideque '(1 2 3 4 5))))))
+                (ideque-count odd? (apply ideque '(1 2 3 4 5))))))
     (define (add-one-if-true element count)
         (if (pred element)
            (+ count 1)
@@ -651,8 +651,8 @@ fi
             (test-equal '((11 21) (12 22) (13 23))
                 (ideque->list
                     (ideque-zip
-                        (ideque '(11 12 13))
-                        (ideque '(21 22 23)))))))
+                        (apply ideque '(11 12 13))
+                        (apply ideque '(21 22 23)))))))
     (list->ideque (apply zip (map ideque->list ideques))))
 
 (define (make-balanced-ideque/internal front back)
@@ -718,7 +718,7 @@ fi
             (test-equal '(2 3 4)
                 (ideque->list
                     (ideque-map 1+
-                        (ideque '(1 2 3)))))))
+                        (apply ideque '(1 2 3)))))))
     (ideque-operate-on-elements/internal ideq map proc))
 
 (define (ideque-filter-map proc ideq)
@@ -728,7 +728,7 @@ fi
                 (ideque->list
                     (ideque-filter-map
                         (λ(x) (and (even? x) (* 2 x)))
-                        (ideque '(1 2 3 4)))))))
+                        (apply ideque '(1 2 3 4)))))))
     (ideque-operate-on-elements/internal ideq filter-map proc))
 
 (define (ideque-for-each proc ideq)
@@ -737,7 +737,7 @@ fi
             (test-equal '(1 2 3)
                 (let ((l (list)))
                     (ideque-for-each (λ(x) (set! l (cons x l)))
-                        (ideque '(1 2 3)))
+                        (apply ideque '(1 2 3)))
                     (reverse l)))))
     (for-each proc (ideque-front-elements ideq))
     (for-each proc (reverse (ideque-back-elements ideq))))
@@ -748,7 +748,7 @@ fi
             (test-equal '(3 2 1)
                 (let ((l (list)))
                     (ideque-for-each-right (λ(x) (set! l (cons x l)))
-                        (ideque '(1 2 3)))
+                        (apply ideque '(1 2 3)))
                     (reverse l)))))
     (for-each proc (ideque-back-elements ideq))
     (for-each proc (reverse (ideque-front-elements ideq))))
@@ -757,7 +757,7 @@ fi
     "Invokes proc on the elements of ideque in forward order, passing the result of the previous invocation as a second argument. For the first invocation, nil is used as the second argument. Returns the result of the last invocation, or nil if there was no invocation. Takes O(n) time."
     #((tests
             (test-equal (fold cons '() '(a b c))
-                (ideque-fold cons '() (ideque '(a b c))))
+                (ideque-fold cons '() (apply ideque '(a b c))))
             (test-equal (fold cons '() '(a b c d e f))
                 (ideque-fold cons '() (make-ideque '(a b c) '(f e d))))))
     (fold proc
@@ -768,7 +768,7 @@ fi
     "Invokes proc on the elements of ideque in reverse order, passing the result of the previous invocation as a second argument. For the first invocation, nil is used as the second argument. Returns the result of the last invocation, or nil if there was no invocation. Takes O(n) time."
     #((tests
             (test-equal (fold-right cons '() '(a b c))
-                (ideque-fold-right cons '() (ideque '(a b c))))
+                (ideque-fold-right cons '() (apply ideque '(a b c))))
             (test-equal (fold-right cons '() '(a b c d e f))
                 (ideque-fold-right cons '() (make-ideque '(a b c) '(f e d))))))
     (fold proc
@@ -781,7 +781,7 @@ fi
             (test-equal '(1 2 3)
                 (ideque->list
                     (ideque-append-map (λ(x) (list x))
-                        (ideque '(1 2 3)))))))
+                        (apply ideque '(1 2 3)))))))
             ;; test-error : ideque-append-map zero? : ideque '(1 2 3)
     (ideque-operate-on-elements/internal ideq append-map proc))
 
@@ -791,7 +791,7 @@ fi
             (test-equal '(2 4 6)
                 (ideque->list (ideque-filter even? (make-ideque '(1 2 3) '(7 6 5 4)))))
             (test-equal '(1 3)
-                (ideque->list (ideque-filter odd? (ideque '(1 2 3)))))))
+                (ideque->list (ideque-filter odd? (apply ideque '(1 2 3)))))))
     (ideque-operate-on-elements/internal ideq filter pred))
 
 
@@ -801,14 +801,14 @@ fi
             (test-equal '(2 4 6)
                 (ideque->list (ideque-remove odd? (make-ideque '(1 2 3) '(7 6 5 4)))))
             (test-equal '(1 3)
-                (ideque->list (ideque-remove even? (ideque '(1 2 3)))))))
+                (ideque->list (ideque-remove even? (apply ideque '(1 2 3)))))))
     (ideque-operate-on-elements/internal ideq remove pred))
 
 (define (ideque-partition proc ideq)
     "Returns two values, the results of (ideque-filter pred ideque) and (ideque-remove pred ideque) respectively, but may be more efficient. Takes O(n) time."
     #((tests
             (test-equal '((1 3) (2 4))
-                (let-values (((true false) (ideque-partition odd? (ideque '(1 2 3 4)))))
+                (let-values (((true false) (ideque-partition odd? (apply ideque '(1 2 3 4)))))
                     (map ideque->list (list true false))))))
     (let-values
         (((true-front false-front) (partition proc (ideque-front-elements ideq)))
@@ -834,16 +834,16 @@ fi
     "Returns the first element of ideque that satisfies pred. If there is no such element, returns the result of invoking the thunk failure; the default thunk is (lambda () #f). Takes O(n) time."
     #((tests
             (test-equal 0
-                (ideque-find zero? (ideque '(1 2 0 3))))
+                (ideque-find zero? (apply ideque '(1 2 0 3))))
             (test-equal 2
-                (ideque-find even? (ideque '(1 2 0 3))))
+                (ideque-find even? (apply ideque '(1 2 0 3))))
             (test-equal 'failed
-                (ideque-find even? (ideque '(1 3))
+                (ideque-find even? (apply ideque '(1 3))
                     (λ() 'failed)))
             (test-equal #f
-                (ideque-find even? (ideque '(1 3))))
+                (ideque-find even? (apply ideque '(1 3))))
             (test-equal #f
-                (ideque-find even? (ideque '())))))
+                (ideque-find even? (apply ideque '())))))
     (apply ideque-find/internal pred
         (ideque-front-elements ideq)
         (ideque-back-elements ideq)
@@ -853,16 +853,16 @@ fi
     "Returns the last element of ideque that satisfies pred. If there is no such element, returns the result of invoking the thunk failure; the default thunk is (lambda () #f). Takes O(n) time."
     #((tests
             (test-equal 0
-                (ideque-find-right zero? (ideque '(1 2 0 3))))
+                (ideque-find-right zero? (apply ideque '(1 2 0 3))))
             (test-equal 0
-                (ideque-find-right even? (ideque '(1 2 0 3))))
+                (ideque-find-right even? (apply ideque '(1 2 0 3))))
             (test-equal 'failed
-                (ideque-find-right even? (ideque '(1 3))
+                (ideque-find-right even? (apply ideque '(1 3))
                     (λ() 'failed)))
             (test-equal #f
-                (ideque-find-right even? (ideque '(1 3))))
+                (ideque-find-right even? (apply ideque '(1 3))))
             (test-equal #f
-                (ideque-find-right even? (ideque '())))))
+                (ideque-find-right even? (apply ideque '())))))
     (apply ideque-find/internal pred
         (ideque-back-elements ideq)
         (ideque-front-elements ideq)
@@ -872,8 +872,8 @@ fi
     "Returns an ideque containing the longest initial prefix of elements in ideque all of which satisfy pred. Takes O(n) time. "
     #((tests
             (test-equal '(2 4 6)
-                (ideque->list (ideque-take-while even? (ideque '(2 4 6 1 3 5 8)))))))
-    (let loop ((res (ideque '())) (ideq ideq))
+                (ideque->list (ideque-take-while even? (apply ideque '(2 4 6 1 3 5 8)))))))
+    (let loop ((res (apply ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-front ideq))))
             res
             (loop
@@ -885,8 +885,8 @@ fi
     "Returns an ideque containing the longest final prefix of elements in ideque all of which satisfy pred. Takes O(n) time. "
     #((tests
             (test-equal '(8)
-                (ideque->list (ideque-take-while-right even? (ideque '(2 4 6 1 3 5 8)))))))
-    (let loop ((res (ideque '())) (ideq ideq))
+                (ideque->list (ideque-take-while-right even? (apply ideque '(2 4 6 1 3 5 8)))))))
+    (let loop ((res (apply ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-back ideq))))
             res
             (loop
@@ -897,7 +897,7 @@ fi
     "Returns an ideque which omits the longest initial prefix of elements in ideque all of which satisfy pred, but includes all other elements of ideque. Takes O(n) time."
     #((tests
             (test-equal '(1 3 5 8)
-                (ideque->list (ideque-drop-while even? (ideque '(2 4 6 1 3 5 8)))))))
+                (ideque->list (ideque-drop-while even? (apply ideque '(2 4 6 1 3 5 8)))))))
     (let loop ((ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-front ideq))))
            ideq
@@ -908,7 +908,7 @@ fi
     "Returns an ideque which omits the longest final prefix of elements in ideque all of which satisfy pred, but includes all other elements of ideque. Takes O(n) time."
     #((tests
             (test-equal '(2 4 6 1 3 5)
-                (ideque->list (ideque-drop-while-right even? (ideque '(2 4 6 1 3 5 8)))))))
+                (ideque->list (ideque-drop-while-right even? (apply ideque '(2 4 6 1 3 5 8)))))))
     (let loop ((ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-back ideq))))
            ideq
@@ -919,9 +919,9 @@ fi
     #((tests
             (test-equal '((1 3) (6 7 8))
                 (map ideque->list
-                    (let-values (((do do-not) (ideque-span odd? (ideque '(1 3 6 7 8)))))
+                    (let-values (((do do-not) (ideque-span odd? (apply ideque '(1 3 6 7 8)))))
                         (list do do-not))))))
-    (let loop ((res (ideque '())) (ideq ideq))
+    (let loop ((res (apply ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (not (pred (ideque-front ideq))))
             (values res ideq)
             (loop
@@ -934,9 +934,9 @@ fi
     #((tests
             (test-equal '((1 3) (6 7 8))
                 (map ideque->list
-                    (let-values (((do do-not) (ideque-break even? (ideque '(1 3 6 7 8)))))
+                    (let-values (((do do-not) (ideque-break even? (apply ideque '(1 3 6 7 8)))))
                         (list do do-not))))))
-    (let loop ((res (ideque '())) (ideq ideq))
+    (let loop ((res (apply ideque '())) (ideq ideq))
         (if (or (ideque-empty? ideq) (pred (ideque-front ideq)))
             (values res ideq)
             (loop
@@ -947,7 +947,7 @@ fi
     "Conversion from an ideque to a SRFI 121 generator. Takes O(n) time. A generator is a procedure that is called repeatedly with no arguments to generate consecutive values, and returns an end-of-file object when it has no more values to return. "
     #((tests
             (test-equal 1
-                ((ideque->generator (ideque '(1 2 3)))))))
+                ((ideque->generator (apply ideque '(1 2 3)))))))
     (define gen
         (let ((ideq ideq))
             (lambda ()
@@ -965,8 +965,8 @@ fi
                 (ideque->list
                     (generator->ideque
                         (ideque->generator
-                            (ideque '(1 2 3))))))))
-    (let loop ((ideq (ideque '())))
+                            (apply ideque '(1 2 3))))))))
+    (let loop ((ideq (apply ideque '())))
         (define res (gen))
         (if (eof-object? res)
             ideq
@@ -979,13 +979,13 @@ fi
 (define (ideque-pop-front ideq)
     "Returns a cons of the ideque with the front element of ideque removed and the retrieved value, similar to assoc. Returns #f for an empty ideque. Takes O(1) time."
     #((tests
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-front (make-ideque '(1) '())))
-            (test-equal (cons (ideque '()) 2)
+            (test-equal (cons (apply ideque '()) 2)
                 (ideque-pop-front
-                    (car (ideque-pop-front (ideque '(1 2))))))
+                    (car (ideque-pop-front (apply ideque '(1 2))))))
             (test-equal #f
-                (ideque-pop-front (ideque '())))))
+                (ideque-pop-front (apply ideque '())))))
     (define-values (front back value)
         (ideque-remove/internal
             (ideque-front-elements ideq)
@@ -999,13 +999,13 @@ fi
 (define (ideque-pop-front! ideq)
     "Returns a cons of the ideque with the front element of ideque removed and the retrieved value, similar to assoc. Returns #f for an empty ideque. Takes O(1) time."
     #((tests
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-front (make-ideque '(1) '())))
-            (test-equal (cons (ideque '()) 2)
+            (test-equal (cons (apply ideque '()) 2)
                 (ideque-pop-front
                     (car (ideque-pop-front (make-ideque '(1) '(2))))))
             (test-equal #f
-                (ideque-pop-front (ideque '())))))
+                (ideque-pop-front (apply ideque '())))))
     (define-values (front back value)
         (ideque-remove/internal
             (ideque-front-elements ideq)
@@ -1020,12 +1020,12 @@ fi
 (define (ideque-pop-back ideq)
     "Returns a cons of the ideque with the front element of ideque removed and the retrieved value, similar to assoc. Returns #f for an empty ideque. Takes O(1) time."
     #((tests
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-back (make-ideque '(1) '())))
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-back (make-ideque '() '(1))))
             (test-equal #f
-                (ideque-pop-back (ideque '())))))
+                (ideque-pop-back (apply ideque '())))))
     (define-values (back front value)
         (ideque-remove/internal
             (ideque-back-elements ideq)
@@ -1039,12 +1039,12 @@ fi
 (define (ideque-pop-back! ideq)
     "Returns a cons of the ideque with the front element of ideque removed and the retrieved value, similar to assoc. Returns #f for an empty ideque. Takes O(1) time."
     #((tests
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-back (make-ideque '(1) '())))
-            (test-equal (cons (ideque '()) 1)
+            (test-equal (cons (apply ideque '()) 1)
                 (ideque-pop-back (make-ideque '() '(1))))
             (test-equal #f
-                (ideque-pop-back (ideque '())))))
+                (ideque-pop-back (apply ideque '())))))
     (define-values (back front value)
         (ideque-remove/internal
             (ideque-back-elements ideq)
